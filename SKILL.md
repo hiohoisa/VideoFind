@@ -1,61 +1,64 @@
 ---
 name: videofind
-description: Locate question-relevant moments in a video URL, subtitle transcript, or timestamped video text and return timestamps, section titles, concise summaries, and verbatim evidence. Use when a user wants to search inside long-form video content rather than receive a whole-video summary.
+description: Search a local SRT, TXT, or Markdown video transcript for question-relevant moments and return timestamped evidence. Use when a user needs to locate specific information inside a long video's existing subtitles or transcript; video URL ingestion, ASR, and whole-video summarization are not supported.
 ---
 
 # VideoFind
 
-Turn a natural-language question into traceable moments inside a video.
+Use VideoFind as an AI-powered video knowledge retrieval skill for locating information in an existing video transcript.
+
+## When to use
+
+Use this skill when a user wants to find where a topic or answer appears in a long video and can provide one of these inputs:
+
+- an `.srt` subtitle file;
+- a `.txt` or `.md` transcript;
+- pasted transcript text, optionally with timestamps.
+
+Do not claim to download video URLs, transcribe audio, analyze frames, or generate LLM summaries. Ask the user for a supported subtitle or transcript when only a video URL is available.
 
 ## Inputs
 
-Accept both fields:
+Require:
 
-- `video`: a public video URL, `.srt` subtitle, `.txt`/`.md` transcript, or pasted video text. Prefer timestamped text when the user provides it.
-- `question`: the specific information the user wants to find.
+- **Transcript**: local subtitle file or transcript text.
+- **Question**: the information the user wants to locate.
 
-Optional preferences may include language, maximum number of results, or a desired level of detail. Do not invent preferences that were not provided.
+Optional retrieval settings are result limit, `semantic` or `keyword` search mode, and answerability threshold. Preserve defaults unless the user requests a change.
 
 ## Output
 
-Return the most relevant results first. Each result must contain:
+For an answerable query, return the strongest matches with:
 
-1. **相关时间戳**: `MM:SS–MM:SS` or `HH:MM:SS–HH:MM:SS`.
-2. **内容标题**: a short label describing the matched idea.
-3. **内容摘要**: a faithful explanation of how the segment answers the question.
-4. **原文依据**: a brief verbatim excerpt from the transcript.
+- **相关时间戳**: the Segment start and end time, or `未提供` for untimed text;
+- **相关文本片段**: the matched Segment text;
+- **原文依据**: text taken directly from that Segment;
+- **匹配分数**: the retrieval score.
 
-If the source has no timestamps, explicitly mark the timestamp as `未提供`, while still returning the best matching passage. If no passage adequately answers the question, say so instead of fabricating evidence.
+The current formatter also produces a question-derived title and an extractive summary. Do not present either as an LLM-generated interpretation.
+
+For an unanswerable query, return exactly:
+
+`未找到与该问题高度相关的视频内容`
+
+Do not attach a forced timestamp or weak candidate to a rejected query.
 
 ## Workflow
 
-1. Identify whether the source is a URL or pasted text.
-2. For a URL, obtain an accessible transcript or subtitles. For a local input, parse `.srt`, `.txt`, or `.md` into `start_time`, `end_time`, and `text`. Preserve source timestamps. If URL content cannot be accessed, ask the user for subtitles or transcript text.
-3. Normalize obvious transcription noise without changing meaning. Keep a copy of the original wording for evidence.
-4. Split the transcript into coherent, overlapping segments. Avoid cutting a sentence or speaker idea in half.
-5. Retrieve candidate segments with `paraphrase-multilingual-MiniLM-L12-v2` embeddings by default. Use keyword mode only when explicitly requested or when comparing retrieval strategies.
-6. Assess answerability using the Top1 similarity score, the Top1–Top2 score gap, and explicit query-keyword coverage. Use the configured threshold, defaulting to `0.50`.
-7. If answerability fails, return exactly `未找到与该问题高度相关的视频内容` without a timestamp or forced candidate.
-8. Re-rank answerable candidates for directness, evidence quality, and coverage of the question.
-9. Merge adjacent candidates when they express one continuous answer.
-10. Produce up to five concise results in the required format. Quote only text supported by the source.
+1. Parse the `.srt`, `.txt`, `.md`, or pasted text with `src/transcript.py`.
+2. Convert the input into `Segment(start_time, end_time, text)` records. Plain text without timestamps remains searchable and uses `未提供` for time fields.
+3. Retrieve Top-K candidates. Use MiniLM embeddings in the default `semantic` mode when the model loads successfully. If it does not, use the implemented character n-gram fallback. Use the separate `keyword` mode only when requested or useful for comparison.
+4. In semantic mode, evaluate answerability using the Top1 score, Top1–Top2 gap, keyword coverage, and configured threshold (`0.50` by default).
+5. Return accepted matches through the formatter, or the no-answer response when evidence is insufficient.
 
-## Quality Rules
+## Local usage
 
-- Treat timestamps and quotations as evidence: never guess them.
-- Distinguish the speaker's claims from VideoFind's summary.
-- Prefer a smaller number of strong matches over many weak matches.
-- Never force a timestamp when the answerability gate rejects all candidates.
-- Retain caveats, conditions, and negations that affect meaning.
-- For conflicting passages, surface the disagreement rather than silently choosing one.
-- Keep evidence excerpts short and sufficient for verification.
-
-## Local MVP
-
-For pasted timestamped text, run:
+Run from the VideoFind repository root:
 
 ```bash
-python3 -m src.cli --transcript demo/sample_transcript.md --question "简历项目经历怎么写？"
+python3 -m src.cli \
+  --transcript demo/sample_subtitles.srt \
+  --question "简历项目经历怎么写？"
 ```
 
-Install `sentence-transformers` to use the default multilingual embedding backend. When that optional dependency is unavailable, the local implementation uses a clearly identified character n-gram fallback so the workflow remains testable. Production versions should add platform-specific transcript adapters and persistent vector storage.
+Prefer evidence fidelity over broad interpretation. Never invent timestamps, quotes, or capabilities that are absent from the source and current implementation.
