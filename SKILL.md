@@ -1,6 +1,6 @@
 ---
 name: videofind
-description: Search a local SRT, TXT, or Markdown video transcript for question-relevant moments and return timestamped evidence. Use when a user needs to locate specific information inside a long video's existing subtitles or transcript; video URL ingestion, ASR, and whole-video summarization are not supported.
+description: AI-powered single-video understanding skill that searches an existing SRT, TXT, or Markdown transcript for relevant segments and returns timestamps with source evidence. Use when a user needs to locate specific information inside a long video's available subtitles or text; video downloading, URL ingestion, ASR, and LLM summarization are not supported.
 ---
 
 # VideoFind
