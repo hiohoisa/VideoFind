@@ -1,10 +1,12 @@
 # VideoFind Architecture
 
-VideoFind 当前是一个面向单个字幕文件的本地检索流程。系统负责解析字幕、召回相关 Segment、判断证据是否充分，并将结果格式化为带时间戳的 Markdown。
+VideoFind 当前支持从公开视频 URL 获取已有字幕，或直接读取本地字幕文件。系统负责解析字幕、召回相关 Segment、判断证据是否充分，并将结果格式化为带时间戳的 Markdown。
 
 ```mermaid
 flowchart LR
-    A[Subtitle or Text File] --> B[transcript.py]
+    U[Public Video URL] --> V[url_loader.py / yt-dlp]
+    V --> B[transcript.py]
+    A[Subtitle or Text File] --> B
     B --> C[Segment List]
     Q[User Question] --> D[retriever.py]
     C --> D
@@ -25,6 +27,7 @@ flowchart LR
 
 | Module | Responsibility |
 |---|---|
+| `url_loader.py` | Use `yt-dlp` to fetch an existing manual or automatic subtitle track from a public video URL |
 | `transcript.py` | Parse `.srt`, `.txt`, `.md`, and timestamped text into `Segment` objects |
 | `semantic_search.py` | Rank Segment objects with MiniLM; fall back to character n-gram when necessary |
 | `retriever.py` | Select semantic or keyword retrieval mode |
@@ -35,4 +38,4 @@ flowchart LR
 
 ## Current boundary
 
-The current pipeline starts with an existing subtitle or text file. It does not download videos, transcribe audio, inspect visual frames, call an LLM, or persist embeddings. Those are possible extension points rather than current capabilities.
+The current pipeline can start with a public URL only when the video already has an accessible subtitle or automatic-caption track. It does not download video media, transcribe audio, inspect visual frames, call an LLM, or persist embeddings. Those are possible extension points rather than current capabilities.

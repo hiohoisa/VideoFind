@@ -6,6 +6,7 @@ from .answerability import AnswerabilityConfig, assess_answerability
 from .models import SearchResult, Segment
 from .retriever import retrieve
 from .transcript import parse_transcript, parse_transcript_file
+from .url_loader import load_transcript_from_url
 
 
 class VideoFindPipeline:
@@ -33,6 +34,19 @@ class VideoFindPipeline:
         """Parse a subtitle/text file, then retrieve relevant segments."""
         segments = parse_transcript_file(path)
         return self.search_segments(segments, question, limit, search_mode, threshold)
+
+    def search_url(
+        self,
+        url: str,
+        question: str,
+        limit: int = 3,
+        search_mode: str = "semantic",
+        threshold: float = 0.50,
+        cookies_from_browser: str | None = None,
+    ) -> list[SearchResult]:
+        """Load a public video's existing subtitles, then search them."""
+        transcript = load_transcript_from_url(url, cookies_from_browser)
+        return self.search(transcript, question, limit, search_mode, threshold)
 
     def search_segments(
         self,

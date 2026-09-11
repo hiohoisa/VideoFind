@@ -4,7 +4,7 @@
 
 **VideoFind 是一个面向 AI Agent / Codex 的单视频理解 Skill，支持从视频字幕中进行语义检索，并定位关键内容时间戳。**
 
-> 当前版本是 subtitle-first MVP：输入已有字幕或文本，输出相关片段、时间戳、原文证据与匹配分数。它不是完整的视频下载、ASR 或 LLM 生成系统。
+> 当前版本是 subtitle-first MVP：输入带字幕的公开视频 URL、字幕文件或文本，输出相关片段、时间戳、原文证据与匹配分数。系统只获取已有字幕，不下载视频媒体，也不执行 ASR 或 LLM 生成。
 
 ## 项目背景
 
@@ -14,9 +14,13 @@ VideoFind 希望解决一个具体问题：
 
 > “我想找到视频中关于某个问题的内容在哪里？”
 
-用户提供单个视频的字幕或文本，再用自然语言提问；VideoFind 将问题与字幕片段进行匹配，快速返回相关内容及其时间位置。适用内容包括求职经验、技术课程、产品分享和会议访谈。
+用户提供带字幕的公开视频 URL、字幕文件或文本，再用自然语言提问；VideoFind 将问题与字幕片段进行匹配，快速返回相关内容及其时间位置。适用内容包括求职经验、技术课程、产品分享和会议访谈。
 
 ## 核心能力
+
+### ✅ 视频 URL 字幕获取
+
+使用 `yt-dlp` 获取公开视频已有的人工字幕或平台自动字幕。不会下载视频媒体；没有任何字幕轨的视频会明确提示暂不支持 Whisper ASR。
 
 ### ✅ 字幕解析
 
@@ -84,7 +88,9 @@ Segment(
 ![VideoFind 系统架构](docs/architecture.png)
 
 ```text
-字幕 / 文本输入
+公开视频 URL / 字幕 / 文本
+      ↓
+yt-dlp 获取已有字幕
       ↓
 字幕解析
       ↓
@@ -138,6 +144,27 @@ pip install -r requirements.txt
 
 ## 使用方法
 
+输入带字幕的公开视频 URL：
+
+```bash
+python3 -m src.cli \
+  --url "https://b23.tv/tNGIF4B" \
+  --question "为什么非洲旅行成本这么高？"
+```
+
+`--url` 与 `--transcript` 二选一。视频必须具有 yt-dlp 可获取的人工字幕或自动字幕。
+
+B站自动字幕可能需要登录。此时可显式复用已登录浏览器的 cookies：
+
+```bash
+python3 -m src.cli \
+  --url "https://www.bilibili.com/video/BV..." \
+  --cookies-from-browser chrome \
+  --question "视频讲了什么？"
+```
+
+支持 `chrome`、`safari`、`firefox` 和 `edge`；VideoFind 不会默认读取浏览器 cookies。
+
 在仓库根目录运行默认语义检索：
 
 ```bash
@@ -173,6 +200,7 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 | 技术 | 当前用途 |
 |---|---|
 | **Python** | 字幕解析、检索 Pipeline、CLI 与自动化测试 |
+| **yt-dlp** | 从公开视频 URL 获取已有字幕或自动字幕，不下载视频媒体 |
 | **Embedding** | 将用户问题和字幕 Segment 转换为语义向量 |
 | **MiniLM** | 提供支持中文的轻量多语言表示 |
 | **Semantic Retrieval** | 使用 cosine similarity 和 Top-K 进行候选排序 |
@@ -196,15 +224,14 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 
 当前尚未实现：
 
-- 视频 URL 自动解析与视频下载
-- 自动获取平台字幕
+- 视频媒体下载与画面理解
 - Whisper ASR
 - LLM 自动总结或 grounded answer
 - 自动生成学习笔记
 - Web UI 与时间戳跳转
 - Segment Embedding 持久化
 
-后续将沿着 `URL 输入 → ASR 转录 → grounded LLM answer → 学习笔记生成 → Web UI` 的方向逐步扩展。以上均为规划，不属于当前版本能力。
+后续将沿着 `无字幕视频 ASR 转录 → grounded LLM answer → 学习笔记生成 → Web UI` 的方向逐步扩展。以上均为规划，不属于当前版本能力。
 
 ## 环境要求
 
@@ -212,5 +239,6 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 - `sentence-transformers`
 - `torch`
 - `numpy`
+- `yt-dlp`
 
 完整依赖见 [`requirements.txt`](requirements.txt)。
