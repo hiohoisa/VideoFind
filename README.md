@@ -1,90 +1,202 @@
 # VideoFind
 
-**一个面向长视频内容的语义检索 AI Skill，支持时间定位、证据返回和无答案拒答。**
+## Overview
 
-用户提供字幕文件或视频文本，再用自然语言提出问题；VideoFind 会定位最相关的视频片段，并返回时间戳、摘要、原文依据和匹配分数。
+**一个基于字幕解析、语义检索和时间戳定位的长视频信息检索工具。**
 
-## Demo
+VideoFind 是一个 **AI-powered video knowledge retrieval skill**。用户提供单个视频的字幕或文本并提出问题，VideoFind 会从内容中定位相关片段，返回时间戳、原文证据和匹配分数；证据不足时则明确拒答。
 
-以下结果来自同一份[示例字幕](demo/sample_subtitles.srt)，使用多语言 MiniLM 和默认 Answerability 阈值 `0.50`。
+当前版本聚焦“从已有字幕中查找内容”，是一个可运行的本地 MVP，不是完整的视频理解系统。视频 URL 处理、语音识别和 LLM 生成均尚未实现。
 
-| 场景 | 用户问题 | VideoFind 输出 |
-|---|---|---|
-| 正确检索 | 简历项目经历怎么写？ | `03:18–04:12` · STAR 项目经历写法 · `0.7407` |
-| 同义搜索 | 怎样在履历中体现自己的贡献？ | `03:18–04:12` · 明确职责、行动和结果 · `0.6712` |
-| 无答案拒答 | 产品经理需要什么能力？ | 未找到与该问题高度相关的视频内容 |
+## Problem
 
-每个案例的 Semantic Retrieval、Answerability 判断和证据输出详见 **[最终用户 Demo](docs/demo.md)**。
+长视频包含大量有价值的信息，但知识被封装在时间轴中。用户知道自己想找什么，却往往不知道答案出现在哪一分钟，只能拖动进度条或从头观看。
 
-## 背景问题
+这类问题常见于：
 
-教程、访谈、课程和直播通常很长。传统搜索只能找到“哪条视频可能相关”，整段摘要也无法回答“答案具体出现在哪里”。用户仍需拖动进度条反复观看，只为寻找其中一小段有用内容。
+- 求职经验视频：快速找到简历、面试或项目经历相关建议
+- 技术课程：回到某个概念、步骤或示例的讲解位置
+- 产品分享：定位功能设计、用户研究或复盘内容
+- 会议访谈：查找某个观点及其原始上下文
 
-VideoFind 将视频字幕转换为可检索的时间片段，让用户直接对视频提问，得到可定位、可验证的答案。它适用于课程复习、访谈溯源、求职学习和产品发布会等长视频场景。
+VideoFind 将字幕转换为可检索的时间片段，让用户从“观看整条视频”转向“提问并核验证据”。产品价值不只是返回一个答案，而是帮助用户更快找到、理解并验证视频中的信息。
 
-## 核心能力
+## What You Get
 
-1. **视频字幕解析**：解析 `.srt`、`.txt` 和 `.md`，统一转换为带起止时间的 Segment。
-2. **Semantic Retrieval**：使用多语言 Embedding 理解问题与字幕片段的语义关系，而不只依赖关键词重合。
-3. **时间定位与证据返回**：输出答案所在时间段、内容摘要、原文依据和相似度分数。
-4. **Answerability 无答案判断**：证据不足时明确拒答，不为无答案问题强制生成时间戳。
+一次有效检索会返回：
 
-## 系统架构
+- **相关视频时间戳**：答案所在片段的起止位置
+- **匹配内容片段**：与问题最相关的字幕 Segment
+- **原始文本依据**：用于核对结果是否忠于视频内容
+- **匹配分数**：展示当前检索模型的相似度结果
 
-```mermaid
-flowchart LR
-    A[字幕文件或视频文本] --> B[字幕解析]
-    B --> C[带时间戳的 Segment]
-    Q[用户问题] --> D[MiniLM Embedding]
-    C --> D
-    D --> E[语义召回与排序]
-    E --> F{Answerability}
-    F -->|答案存在| G[时间戳 + 摘要 + 原文证据]
-    F -->|证据不足| H[无答案拒答]
+如果现有字幕没有足够证据，系统返回：
+
+> 未找到与该问题高度相关的视频内容
+
+## Current Features
+
+### Subtitle Parsing
+
+支持读取：
+
+- `.srt` 字幕文件
+- `.txt` 文本文件
+- `.md` Markdown 文件
+- `[00:08:14]`、`[00:08:14 - 00:08:30]` 等带时间戳文本
+
+不同输入会被统一转换为结构化 Segment：
+
+```python
+Segment(
+    start_time="08:14",
+    end_time="08:30",
+    text="项目经历应该突出个人贡献",
+)
 ```
 
-核心技术设计：
+没有时间信息的纯文本也可以解析，但时间字段会显示为 `未提供`。
 
-- **Embedding 模型**：`paraphrase-multilingual-MiniLM-L12-v2`
-- **检索策略**：向量余弦相似度 TopK，保留关键词模式；模型不可用时降级为 character n-gram
-- **可靠性判断**：综合 Top1 分数、Top1/Top2 分差和查询关键词覆盖率
-- **可调配置**：默认 `threshold=0.50`，支持在召回率与误报率之间调整
+### Semantic Retrieval
 
-## Evaluation
+- 默认使用 Embedding-based retrieval，对问题和字幕片段进行语义匹配
+- 环境可用时加载多语言 MiniLM 模型 `paraphrase-multilingual-MiniLM-L12-v2`
+- MiniLM 或相关依赖加载失败时，自动降级为本地 character n-gram 检索
+- 另提供独立的 `keyword` 模式，便于对照或在简单场景中使用
 
-项目使用 10 个问题进行评测，覆盖直接命中、同义改写和视频中不存在三种情况。完整问题、分数与判断见 **[evaluation.md](evaluation.md)**。
+### Answerability Checking
 
-| 测试类型 | 优化前 | 增加 Answerability 后 |
-|---|---:|---:|
-| 直接命中 | 4/4（100%） | 4/4（100%） |
-| 同义改写 | 2/3（66.7%） | 2/3（66.7%） |
-| 视频中不存在 | 0/3（0%） | 3/3（100%） |
-| **总体准确率** | **6/10（60%）** | **9/10（90%）** |
+语义召回后，系统结合以下信号判断字幕是否包含足够证据：
 
-Answerability 将无答案问题的正确拒答率从 0% 提升到 100%，总体准确率提升 30 个百分点。当前剩余错误是一条同义问题漏答，后续重点是改善召回与排序质量。
+- Top1 相似度分数
+- Top1 与 Top2 的分数差距
+- 查询关键词覆盖情况
 
-## 快速开始
+当证据不足时，VideoFind 不会为了展示结果而强制返回时间段。这一门控用于降低“视频中没有答案，却仍返回最相似片段”的误导风险。
 
-安装依赖：
+## Usage
+
+建议使用 Python 虚拟环境：
 
 ```bash
-python3 -m pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-运行语义检索 Demo：
+在仓库根目录运行：
+
+```bash
+python3 -m src.cli \
+  --transcript demo/sample_subtitles.srt \
+  --question "简历项目经历怎么写？"
+```
+
+语义检索是默认模式，也可以显式调整检索模式、返回数量和阈值：
 
 ```bash
 python3 -m src.cli \
   --transcript demo/sample_subtitles.srt \
   --question "简历项目经历怎么写？" \
   --search-mode semantic \
+  --limit 3 \
   --threshold 0.50
 ```
 
-首次运行会下载多语言 MiniLM 模型。启动信息会显示当前使用 MiniLM Embedding Search，还是 character fallback。
+示例输出：
 
-## Future Work
+```text
+时间戳：03:18–04:12
+相关内容：项目经历是简历最重要的部分。不要只写参与了某项目，
+          要说清楚你负责什么、采取了什么行动，以及最后带来了什么结果。
+原文依据：同上，直接来自命中的字幕片段
+匹配分数：0.7407
+```
 
-- **Whisper ASR**：直接从视频音轨生成带时间戳字幕，进一步降低输入成本。
-- **Web UI**：支持上传、提问、结果展示和点击时间戳跳转播放。
-- **向量数据库**：持久化大规模视频 Segment Embedding，支持跨视频检索和增量索引。
+实际 CLI 会以 Markdown 格式输出内容标题、摘要、原文依据和分数。当前摘要是提取式结果，即直接使用命中的字幕 Segment，不是 LLM 生成摘要。
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Input Subtitle<br/>SRT / TXT / MD] --> B[Transcript Parser]
+    B --> C[Segment Builder<br/>start_time / end_time / text]
+    Q[User Question] --> D[Embedding / Keyword Retrieval]
+    C --> D
+    D --> E[Top-K Candidates]
+    E --> F{Answerability Check}
+    F -->|Evidence found| G[Timestamp-based Result]
+    F -->|Insufficient evidence| H[No-answer Response]
+```
+
+工作流程可以概括为：
+
+```text
+Input Subtitle
+      ↓
+Transcript Parser
+      ↓
+Segment Builder
+      ↓
+Embedding / Keyword Retrieval
+      ↓
+Answerability Check
+      ↓
+Timestamp-based Result
+```
+
+当前 Segment 和 Embedding 都在单次进程中处理，没有持久化向量数据库。更详细的模块说明见 [docs/architecture.md](docs/architecture.md)。
+
+## Demo
+
+**用户输入**
+
+> 我想找视频中讲项目经历的部分
+
+**VideoFind 输出**
+
+- 时间戳：`03:18–04:12`
+- 匹配片段：项目经历是简历最重要的部分。不要只写参与了某项目，要说清楚你负责什么、采取了什么行动，以及最后带来了什么结果。
+- 匹配结果：定位到 STAR 项目经历写法相关字幕，可回到对应时间核验
+
+项目还提供直接命中、同义搜索和无答案拒答三个完整案例，见 [docs/demo.md](docs/demo.md)。
+
+## Evaluation
+
+当前评测基于 [`demo/sample_subtitles.srt`](demo/sample_subtitles.srt) 和 10 个问题，覆盖直接命中、同义改写与视频中不存在三类场景。结果采用人工预期时间段进行判定，完整记录见 [evaluation.md](evaluation.md)。
+
+| 测试类型 | Answerability 优化前 | 优化后 |
+|---|---:|---:|
+| 直接命中 | 4/4 | 4/4 |
+| 同义改写 | 2/3 | 2/3 |
+| 无答案拒答 | 0/3 | 3/3 |
+| **合计** | **6/10** | **9/10** |
+
+现有验证包括：
+
+- **Answerability 测试**：`tests/test_answerability.py` 覆盖有效答案接受、无答案拒绝和阈值调整
+- **Semantic retrieval 评测**：记录 MiniLM 后端下直接命中与同义改写的 Top1 结果
+- **无答案拒答评测**：检查三个字幕中不存在的问题是否被正确拒绝
+
+`9/10` 是当前小型 Demo 数据集上的结果，不代表真实长视频或其他领域的泛化准确率。已知失败案例是一个有效同义问题被错误排序并拒答，这也说明下一阶段需要扩充数据集并继续校准召回与门控策略。
+
+## Future Direction
+
+以下是规划方向，**当前版本尚未实现**：
+
+- 支持视频 URL 输入
+- 自动获取公开视频字幕
+- 使用 ASR 处理无字幕视频
+- 基于检索证据生成 grounded LLM summary
+- 自动生成结构化学习笔记
+- 提供问答与引用联动的 Web UI
+- 持久化 Segment Embedding，并扩展到更长内容与重复查询
+
+## Requirements
+
+- Python 3.10+
+- `sentence-transformers`
+- `torch`
+- `numpy`
+
+完整依赖见 [`requirements.txt`](requirements.txt)。首次运行 MiniLM 语义模式时需要下载模型；如果加载失败，程序会提示并使用 character fallback。
