@@ -24,7 +24,7 @@ VideoFind 希望解决一个具体问题：
 
 ### ✅ Whisper ASR fallback
 
-没有可用字幕时，VideoFind 自动提取音频并使用本地 Whisper 生成带时间戳文本。音频保存在临时目录中，处理结束后自动删除；不会下载完整视频。
+没有可用字幕时，VideoFind 自动提取音频并使用本地 Whisper 生成带时间戳文本。默认模型为 `small`；只下载音频，不下载完整视频。
 
 ### ✅ 字幕解析
 
@@ -62,6 +62,9 @@ Segment(
 - 匹配字幕 Segment
 - 原始字幕证据
 - 检索匹配分数
+- 基于命中字幕生成的提取式总结
+
+CLI 使用结构化 Markdown 展示查询问题、推荐观看位置表格、带时间戳的原文依据和简短总结。总结只组合已命中的字幕文本，不调用 LLM，也不会补充来源中不存在的信息。
 
 无答案时返回：
 
@@ -201,7 +204,103 @@ python3 -m src.cli \
   --search-mode keyword
 ```
 
-CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前标题由问题生成，摘要直接使用命中的字幕 Segment，不是 LLM 生成内容。
+CLI 输出结构化 Markdown，包括查询问题、推荐观看位置、带时间戳的原文依据、匹配分数和提取式 AI总结。当前总结直接组合命中的字幕 Segment，不是 LLM 生成内容。
+
+## Whisper模型说明
+
+无字幕视频默认使用 Whisper `small`。它比 `base` 更准确，但转写速度更慢、占用内存更多；`medium` 通常能进一步提升识别质量，同时需要更长处理时间和更多资源。
+
+| 模型 | 相对速度 | 相对准确率 | 适用场景 |
+|---|---|---|---|
+| `base` | 快 | 基础 | 快速预览、清晰人声 |
+| `small` | 中等 | 较高 | 默认选择，平衡速度与效果 |
+| `medium` | 慢 | 更高 | 口音、噪声或准确率优先 |
+
+CLI 接口保持不变；需要切换模型时增加可选参数：
+
+```bash
+python3 -m src.cli \
+  --url "VIDEO_URL" \
+  --question "问题" \
+  --model medium
+```
+
+`--model` 仅在 Whisper ASR 路径中生效。还支持 `tiny`、`large` 和 `turbo`。
+
+## 缓存机制说明
+
+VideoFind 按 YouTube/Bilibili 视频 ID 缓存结果，避免同一视频重复获取字幕、下载音频或执行 Whisper。默认目录为 `cache/<video_id>/`，并已加入 `.gitignore`：
+
+```text
+cache/<video_id>/
+├── metadata.json
+├── audio.wav
+└── transcript.json
+```
+
+- `metadata.json`：视频 URL、标题、平台、创建时间和 Whisper 模型。
+- `audio.wav`：仅无字幕 ASR 路径生成，供后续更换模型时复用。
+- `transcript.json`：字幕来源以及带开始时间、结束时间和原文的 Segment。
+
+平台字幕缓存可直接复用；Whisper 缓存仅在模型一致时命中。更换 `--model` 会复用已有音频并重新转写。
+
+### 缓存管理 CLI
+
+```bash
+# 查看视频数量、总大小和各缓存元数据
+python3 -m src.cli --cache-info
+
+# 删除指定视频缓存
+python3 -m src.cli --remove-cache VIDEO_ID
+
+# 清理全部缓存
+python3 -m src.cli --clear-cache
+```
+
+`--remove-cache` 只接受字母、数字、下划线和连字符组成的视频 ID，防止缓存目录路径逃逸。
+
+## 输出文件
+
+终端始终显示完整结果。传入路径可额外保存 Markdown：
+
+```bash
+python3 -m src.cli \
+  --url "VIDEO_URL" \
+  --question "问题" \
+  --output result.md
+```
+
+只写 `--output` 时，结果自动保存到 `outputs/<视频标题>_<问题>.md`；目录自动创建，自动文件名会过滤不安全字符。
+
+Markdown 结果结构：
+
+```text
+# VideoFind 检索结果
+## 🎬 视频信息
+  标题 / URL / 平台 / 时长 / 字幕来源 / Whisper模型
+## 🔍 查询问题
+## 📍 推荐观看位置
+## 📝 原文依据
+## 🤖 内容总结
+```
+
+## 数据流程图
+
+```text
+URL 输入
+   ↓
+检查 video_id 缓存 ── 命中 ──→ 读取 transcript.json
+   ↓ 未命中
+获取人工字幕 / 自动字幕
+   ↓ 无字幕
+下载并缓存 audio.wav → Whisper ASR
+   ↓
+保存 transcript.json
+   ↓
+Segment → Embedding → Semantic Retrieval → Answerability → Markdown 输出
+                                                           ↓
+                                                  终端 + 可选 outputs/*.md
+```
 
 ## 技术实现
 
@@ -209,7 +308,8 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 |---|---|
 | **Python** | 字幕解析、检索 Pipeline、CLI 与自动化测试 |
 | **yt-dlp** | 获取平台字幕；无字幕时只下载临时音频，不下载完整视频 |
-| **Whisper ASR** | 无字幕时下载临时音频并生成带时间戳转录 |
+| **Whisper ASR** | 无字幕时使用默认 `small` 模型生成带时间戳转录 |
+| **Local Cache** | 按视频 ID 缓存字幕、ASR 音频、转录与元数据 |
 | **Embedding** | 将用户问题和字幕 Segment 转换为语义向量 |
 | **MiniLM** | 提供支持中文的轻量多语言表示 |
 | **Semantic Retrieval** | 使用 cosine similarity 和 Top-K 进行候选排序 |

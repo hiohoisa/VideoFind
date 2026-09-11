@@ -3,7 +3,7 @@
 from pathlib import Path
 
 
-def transcribe_audio(audio_path: str | Path, model_name: str = "base") -> list[dict]:
+def transcribe_audio(audio_path: str | Path, model_name: str = "small") -> list[dict]:
     """Transcribe audio into start/end/text dictionaries using local Whisper."""
     try:
         import whisper

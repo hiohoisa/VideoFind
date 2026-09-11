@@ -1,7 +1,8 @@
-"""Download only a video's audio into an automatically cleaned temporary directory."""
+"""Download video audio with temporary staging and optional cache persistence."""
 
 from contextlib import contextmanager
 from pathlib import Path
+import shutil
 from tempfile import TemporaryDirectory
 from typing import Iterator
 
@@ -9,8 +10,16 @@ from .url_loader import TranscriptUnavailableError
 
 
 @contextmanager
-def download_audio(url: str, cookies_from_browser: str | None = None) -> Iterator[Path]:
-    """Yield a temporary MP3 downloaded with yt-dlp, then delete it."""
+def download_audio(
+    url: str,
+    cookies_from_browser: str | None = None,
+    destination: str | Path | None = None,
+) -> Iterator[Path]:
+    """Yield WAV audio, optionally persisting it at a cache destination."""
+    destination_path = Path(destination) if destination else None
+    if destination_path and destination_path.exists():
+        yield destination_path
+        return
     try:
         import yt_dlp
     except ImportError as exc:
@@ -26,8 +35,7 @@ def download_audio(url: str, cookies_from_browser: str | None = None) -> Iterato
             "outtmpl": str(Path(directory) / "audio.%(ext)s"),
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
+                "preferredcodec": "wav",
             }],
         }
         if cookies_from_browser:
@@ -38,7 +46,12 @@ def download_audio(url: str, cookies_from_browser: str | None = None) -> Iterato
         except Exception as exc:
             raise TranscriptUnavailableError(f"音频提取失败：{exc}") from exc
 
-        audio_path = Path(directory) / "audio.mp3"
+        audio_path = Path(directory) / "audio.wav"
         if not audio_path.exists():
-            raise TranscriptUnavailableError("音频提取失败：未生成 MP3 文件")
-        yield audio_path
+            raise TranscriptUnavailableError("音频提取失败：未生成 WAV 文件")
+        if destination_path:
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(audio_path, destination_path)
+            yield destination_path
+        else:
+            yield audio_path
