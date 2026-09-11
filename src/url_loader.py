@@ -34,6 +34,8 @@ def load_transcript_from_url(url: str, cookies_from_browser: str | None = None) 
         "ignoreconfig": True,
         "noplaylist": True,
         "skip_download": True,
+        "writesubtitles": True,
+        "writeautomaticsub": True,
     }
     if cookies_from_browser:
         base_options["cookiesfrombrowser"] = (cookies_from_browser, None, None, None)
@@ -55,8 +57,6 @@ def load_transcript_from_url(url: str, cookies_from_browser: str | None = None) 
         output_template = str(Path(directory) / "subtitle.%(ext)s")
         options = {
             **base_options,
-            "writesubtitles": True,
-            "writeautomaticsub": True,
             "subtitleslangs": [language],
             "subtitlesformat": "srt/vtt/best",
             "outtmpl": output_template,

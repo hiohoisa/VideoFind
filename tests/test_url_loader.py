@@ -57,6 +57,7 @@ class URLLoaderTests(unittest.TestCase):
         with patch.dict(sys.modules, {"yt_dlp": fake_module}):
             transcript = load_transcript_from_url("https://example.com/video")
         self.assertIn("测试字幕", transcript)
+        self.assertTrue(_FakeYoutubeDL.options_seen[0]["writeautomaticsub"])
 
     def test_passes_browser_cookies_to_yt_dlp(self) -> None:
         _FakeYoutubeDL.options_seen.clear()
