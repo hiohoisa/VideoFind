@@ -119,16 +119,16 @@ https://github.com/hiohoisa/VideoFind
 ### 手动安装
 
 ```bash
-mkdir -p ~/.agents/skills
-git clone https://github.com/hiohoisa/VideoFind.git ~/.agents/skills/videofind
+mkdir -p ~/.codex/skills
+git clone https://github.com/hiohoisa/VideoFind.git ~/.codex/skills/videofind
 ```
 
-如果安装后没有立即显示，请重启 Codex。Skill 安装与发现规则见 [OpenAI 官方文档](https://developers.openai.com/codex/skills)。
+内置 Skill Installer 安装到 `$CODEX_HOME/skills`；未设置 `CODEX_HOME` 时默认使用 `~/.codex/skills`。如果安装后没有立即显示，请重启 Codex。Skill 格式与发现规则见 [OpenAI 官方文档](https://developers.openai.com/codex/skills)。
 
 ### 安装 Python 环境
 
 ```bash
-cd ~/.agents/skills/videofind
+cd ~/.codex/skills/videofind
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
