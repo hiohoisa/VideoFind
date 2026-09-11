@@ -1,5 +1,11 @@
 # VideoFind
 
+**AI-powered video knowledge retrieval skill for finding important moments in long videos.**
+
+从已有字幕中定位相关时刻，返回可核验的原文证据，并在证据不足时拒绝回答。
+
+---
+
 ## Overview
 
 **一个基于字幕解析、语义检索和时间戳定位的长视频信息检索工具。**
@@ -74,15 +80,42 @@ Segment(
 
 当证据不足时，VideoFind 不会为了展示结果而强制返回时间段。这一门控用于降低“视频中没有答案，却仍返回最相似片段”的误导风险。
 
-## Usage
+## Installation
 
-建议使用 Python 虚拟环境：
+### One-click installation
+
+在 Codex 中直接输入：
+
+```text
+帮我安装这个 skill：
+https://github.com/hiohoisa/VideoFind
+```
+
+Codex 可以使用内置的 Skill Installer 从 GitHub 仓库安装 Skill。安装后如果没有立即显示，请重启 Codex。
+
+### Manual installation
+
+将仓库克隆到 Codex 当前使用的个人 Skill 目录：
 
 ```bash
+mkdir -p ~/.agents/skills
+git clone https://github.com/hiohoisa/VideoFind.git ~/.agents/skills/videofind
+```
+
+Codex 会从 `~/.agents/skills` 发现个人 Skill。安装规范可参考 [OpenAI 官方 Skill 文档](https://developers.openai.com/codex/skills)。
+
+### Python environment
+
+如果要运行仓库中的本地检索 CLI，请进入 Skill 目录并安装 Python 依赖：
+
+```bash
+cd ~/.agents/skills/videofind
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+## Usage
 
 在仓库根目录运行：
 
