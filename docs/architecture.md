@@ -1,11 +1,14 @@
 # VideoFind Architecture
 
-VideoFind 当前支持从公开视频 URL 获取已有字幕，或直接读取本地字幕文件。系统负责解析字幕、召回相关 Segment、判断证据是否充分，并将结果格式化为带时间戳的 Markdown。
+VideoFind 优先从公开视频 URL 获取已有字幕；没有可用字幕时，下载临时音频并使用本地 Whisper ASR 转写。系统也可直接读取本地字幕文件，并统一完成 Segment 检索、证据判断和时间戳输出。
 
 ```mermaid
 flowchart LR
     U[Public Video URL] --> V[url_loader.py / yt-dlp]
-    V --> B[transcript.py]
+    V -->|Subtitle available| B[transcript.py]
+    V -->|No subtitle| X[audio_loader.py / temporary audio]
+    X --> W[asr.py / Whisper]
+    W --> C
     A[Subtitle or Text File] --> B
     B --> C[Segment List]
     Q[User Question] --> D[retriever.py]
@@ -28,6 +31,8 @@ flowchart LR
 | Module | Responsibility |
 |---|---|
 | `url_loader.py` | Use `yt-dlp` to fetch an existing manual or automatic subtitle track from a public video URL |
+| `audio_loader.py` | Download temporary audio only when no usable subtitle track exists |
+| `asr.py` | Use local Whisper to create timestamped text from temporary audio |
 | `transcript.py` | Parse `.srt`, `.txt`, `.md`, and timestamped text into `Segment` objects |
 | `semantic_search.py` | Rank Segment objects with MiniLM; fall back to character n-gram when necessary |
 | `retriever.py` | Select semantic or keyword retrieval mode |
@@ -38,4 +43,4 @@ flowchart LR
 
 ## Current boundary
 
-The current pipeline can start with a public URL only when the video already has an accessible subtitle or automatic-caption track. It does not download video media, transcribe audio, inspect visual frames, call an LLM, or persist embeddings. Those are possible extension points rather than current capabilities.
+The current pipeline can start with a public URL regardless of subtitle availability: it uses platform captions first and Whisper ASR as fallback. It downloads audio only for ASR and removes the temporary file afterward. It does not inspect visual frames, call an LLM, or persist embeddings.

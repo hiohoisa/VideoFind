@@ -2,3 +2,5 @@ sentence-transformers
 torch
 numpy
 yt-dlp
+openai-whisper
+ffmpeg-python

@@ -4,7 +4,7 @@
 
 **VideoFind 是一个面向 AI Agent / Codex 的单视频理解 Skill，支持从视频字幕中进行语义检索，并定位关键内容时间戳。**
 
-> 当前版本是 subtitle-first MVP：输入带字幕的公开视频 URL、字幕文件或文本，输出相关片段、时间戳、原文证据与匹配分数。系统只获取已有字幕，不下载视频媒体，也不执行 ASR 或 LLM 生成。
+> 当前版本是 subtitle-first MVP：优先使用平台字幕；没有可用字幕时，仅下载临时音频并使用本地 Whisper ASR 转写。系统不分析视频画面，也不执行 LLM 生成。
 
 ## 项目背景
 
@@ -20,7 +20,11 @@ VideoFind 希望解决一个具体问题：
 
 ### ✅ 视频 URL 字幕获取
 
-使用 `yt-dlp` 获取公开视频已有的人工字幕或平台自动字幕。不会下载视频媒体；没有任何字幕轨的视频会明确提示暂不支持 Whisper ASR。
+使用 `yt-dlp` 获取公开视频已有的人工字幕或平台自动字幕。Bilibili 字幕可显式复用浏览器登录 cookies。
+
+### ✅ Whisper ASR fallback
+
+没有可用字幕时，VideoFind 自动提取音频并使用本地 Whisper 生成带时间戳文本。音频保存在临时目录中，处理结束后自动删除；不会下载完整视频。
 
 ### ✅ 字幕解析
 
@@ -88,9 +92,13 @@ Segment(
 ![VideoFind 系统架构](docs/architecture.png)
 
 ```text
-公开视频 URL / 字幕 / 文本
+公开视频 URL
       ↓
-yt-dlp 获取已有字幕
+人工字幕 / 自动字幕优先
+      ↓ 无可用字幕
+临时音频 → Whisper ASR
+      ↓
+统一字幕文本
       ↓
 字幕解析
       ↓
@@ -152,7 +160,7 @@ python3 -m src.cli \
   --question "为什么非洲旅行成本这么高？"
 ```
 
-`--url` 与 `--transcript` 二选一。视频必须具有 yt-dlp 可获取的人工字幕或自动字幕。
+`--url` 与 `--transcript` 二选一。URL 视频优先使用平台字幕；没有可用字幕时自动进入 Whisper ASR，无需更改命令。
 
 B站自动字幕可能需要登录。此时可显式复用已登录浏览器的 cookies：
 
@@ -200,7 +208,8 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 | 技术 | 当前用途 |
 |---|---|
 | **Python** | 字幕解析、检索 Pipeline、CLI 与自动化测试 |
-| **yt-dlp** | 从公开视频 URL 获取已有字幕或自动字幕，不下载视频媒体 |
+| **yt-dlp** | 获取平台字幕；无字幕时只下载临时音频，不下载完整视频 |
+| **Whisper ASR** | 无字幕时下载临时音频并生成带时间戳转录 |
 | **Embedding** | 将用户问题和字幕 Segment 转换为语义向量 |
 | **MiniLM** | 提供支持中文的轻量多语言表示 |
 | **Semantic Retrieval** | 使用 cosine similarity 和 Top-K 进行候选排序 |
@@ -224,14 +233,13 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 
 当前尚未实现：
 
-- 视频媒体下载与画面理解
-- Whisper ASR
+- 视频画面理解
 - LLM 自动总结或 grounded answer
 - 自动生成学习笔记
 - Web UI 与时间戳跳转
 - Segment Embedding 持久化
 
-后续将沿着 `无字幕视频 ASR 转录 → grounded LLM answer → 学习笔记生成 → Web UI` 的方向逐步扩展。以上均为规划，不属于当前版本能力。
+后续将沿着 `grounded LLM answer → 学习笔记生成 → Web UI` 的方向逐步扩展。以上均为规划，不属于当前版本能力。
 
 ## 环境要求
 
@@ -240,5 +248,13 @@ CLI 输出内容标题、提取式摘要、原文依据和匹配分数。当前�
 - `torch`
 - `numpy`
 - `yt-dlp`
+- `openai-whisper`
+- `ffmpeg-python`
+
+Whisper 依赖本机 `ffmpeg`。macOS 可使用 Homebrew 安装：
+
+```bash
+brew install ffmpeg
+```
 
 完整依赖见 [`requirements.txt`](requirements.txt)。
