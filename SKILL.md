@@ -1,11 +1,11 @@
 ---
 name: videofind
-description: AI-powered single-video understanding skill that uses platform subtitles or local Whisper ASR for a public video URL, then retrieves relevant segments with timestamps and source evidence. Also supports SRT, TXT, and Markdown transcripts. Use when a user needs to locate specific information inside a long video.
+description: Single-video knowledge retrieval skill for mapping a natural-language question to relevant video segments, timestamps, and source evidence. Uses platform subtitles or local Whisper ASR for public URLs and also supports SRT, TXT, and Markdown transcripts.
 ---
 
 # VideoFind
 
-Use VideoFind as an AI-powered video knowledge retrieval skill for locating information in an existing video transcript.
+Use VideoFind as a Question-to-Video-Evidence retrieval skill. Its core is the Retrieval + Evidence Layer: locate knowledge relevant to a user's question and return verifiable timestamps and transcript evidence.
 
 ## When to use
 
@@ -39,10 +39,10 @@ For an answerable query, return the strongest matches with:
 - **相关文本片段**: the matched Segment text;
 - **原文依据**: text taken directly from that Segment;
 - **匹配分数**: the retrieval score.
-- **AI总结**: a concise extractive combination of retrieved Segment text.
+- **内容说明**: a concise extractive combination of retrieved Segment text.
 - **视频信息**: title, URL, platform, duration, subtitle source, and Whisper model when available.
 
-Do not add facts, labels, or interpretations that are absent from the retrieved text. The current AI summary is deterministic and extractive; do not present it as an LLM-generated interpretation.
+Do not add facts, labels, or interpretations that are absent from the retrieved text. The current content summary is deterministic and extractive; do not present it as an LLM-generated answer or a complete-video summary.
 
 For an unanswerable query, return exactly:
 

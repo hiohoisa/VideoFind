@@ -1,6 +1,8 @@
 # VideoFind Architecture
 
-VideoFind 优先从公开视频 URL 获取已有字幕；没有可用字幕时，下载临时音频并使用本地 Whisper ASR 转写。系统也可直接读取本地字幕文件，并统一完成 Segment 检索、证据判断和时间戳输出。
+VideoFind 是一个面向 AI Agent 的单视频知识检索 Skill，核心链路是“自然语言问题 → 相关知识片段 → 时间戳 → 原文证据”。它优先从公开视频 URL 获取已有字幕；没有可用字幕时，下载音频并使用本地 Whisper ASR 转写。系统也可直接读取本地字幕文件，并统一完成 Segment 检索、证据判断和时间戳输出。
+
+`architecture.png` 是核心 Retrieval + Evidence 子链路的概览；下方 Mermaid 图展示当前实现包含 URL、Cache、平台字幕和 Whisper fallback 的完整数据流程。
 
 ```mermaid
 flowchart LR
