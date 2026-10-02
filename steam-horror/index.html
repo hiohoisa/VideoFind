@@ -5,468 +5,148 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>蒸汽惊魂夜</title>
-<style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101217;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;touch-action:none}
-button{appearance:none;-webkit-appearance:none;border:1px solid #6d768c;background:#2d3340;color:#fff;border-radius:12px;padding:11px 16px;font-size:16px}
-button.sel{background:#7159a9;border-color:#d8c9ff;box-shadow:0 0 0 2px #d8c9ff55 inset}
-#menu{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,#2b2942,#101217 72%)}
-#panel{width:min(900px,94vw);max-height:94vh;overflow:auto;background:#171b25f5;border:1px solid #4a5266;border-radius:22px;padding:18px}
-h1{margin:0 0 5px;font-size:32px}.hint{font-size:13px;opacity:.72}.card{margin-top:12px;padding:12px;background:#222735;border-radius:14px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-#start{background:#7758bb;font-weight:700;font-size:21px;padding:14px 28px}
-#game{position:fixed;inset:0;width:100%;height:100%;display:none;background:#1f2a24}
-#hud{position:fixed;left:10px;top:max(8px,env(safe-area-inset-top));z-index:8;font-size:14px;text-shadow:0 2px 5px #000;pointer-events:none}
-#toast{position:fixed;left:50%;top:13%;transform:translateX(-50%);z-index:9;padding:8px 14px;border-radius:12px;background:#000b;font-size:14px;pointer-events:none;min-width:80px;text-align:center}
-#controls{display:none;position:fixed;inset:0;z-index:10;pointer-events:none}
-#joy{position:absolute;left:max(20px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:#ffffff14;border:2px solid #ffffff3d;pointer-events:auto;touch-action:none}
-#knob{position:absolute;width:54px;height:54px;border-radius:50%;background:#ffffff55;border:2px solid #ffffff9a;left:37px;top:37px}
-.act{position:absolute;width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;border:2px solid #ffffff55;background:#343b4ee8;font-size:13px;pointer-events:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-#interact{right:196px;bottom:28px;background:#3e6650e8}
-#attack{right:22px;bottom:28px}
-#skill1{right:108px;bottom:84px;background:#544477e8}
-#skill2{right:24px;bottom:122px;background:#68405ee8}
-#carry{right:196px;bottom:120px}
-#back{position:fixed;right:12px;top:max(10px,env(safe-area-inset-top));z-index:12;display:none;background:#0008;border:1px solid #fff4;padding:8px 10px;font-size:13px}
-@media(max-width:760px){.act{width:64px;height:64px}#interact{right:170px}#carry{right:170px}}
-</style>
+<title>蒸汽惊魂夜 V2</title>
+<link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <div id="menu">
-  <div id="panel">
-    <h1>蒸汽惊魂夜</h1>
-    <div class="hint">平板触屏试玩版 · 建议横屏</div>
-    <div class="card"><b>模式</b><div class="row"><button id="m14" class="sel">1v4</button><button id="m28">2v8</button></div></div>
-    <div class="card"><b>阵营</b><div class="row"><button id="ss" class="sel">逃生者</button><button id="sh">追捕者 · 贝琳达</button></div></div>
-    <div class="card"><b>逃生角色</b><div class="row" id="chars">
-      <button data-c="miner" class="sel">矿工</button>
-      <button data-c="doctor">医生</button>
-      <button data-c="dancer">舞女</button>
-      <button data-c="soldier">士兵</button>
-      <button data-c="tamer">驯兽师</button>
-    </div></div>
-    <div class="card hint" id="status">当前：1v4 / 逃生者 / 矿工</div>
-    <div class="row"><button id="start">开始游戏</button></div>
-    <div class="hint">左下摇杆移动；右侧“交互 / 攻击 / 技能”。电脑也可用 WASD、E、J、K、L。</div>
+  <div class="menu-shell">
+    <div class="title-block">
+      <div class="eyebrow">STEAM HORROR NIGHT · V2</div>
+      <h1>蒸汽惊魂夜</h1>
+      <div class="subtitle">平板触屏版 · 程序绘制美术 · 建议横屏</div>
+    </div>
+
+    <div class="menu-grid">
+      <section class="glass-card">
+        <div class="section-title">对局设置</div>
+        <div class="label">模式</div>
+        <div class="seg-row">
+          <button id="m14" class="seg active">1v4</button>
+          <button id="m28" class="seg">2v8</button>
+        </div>
+
+        <div class="label">阵营</div>
+        <div class="seg-row">
+          <button id="ss" class="seg active">逃生者</button>
+          <button id="sh" class="seg">追捕者 · 贝琳达</button>
+        </div>
+
+        <div class="label">逃生角色</div>
+        <div class="character-grid" id="chars">
+          <button data-c="miner" class="char-card active"><span class="char-icon" data-icon="shovel"></span><b>矿工</b><small>铁铲 / 能工巧匠</small></button>
+          <button data-c="doctor" class="char-card"><span class="char-icon" data-icon="med"></span><b>医生</b><small>医疗包 / 血样采集</small></button>
+          <button data-c="dancer" class="char-card"><span class="char-icon" data-icon="dash"></span><b>舞女</b><small>闪避 / 借力</small></button>
+          <button data-c="soldier" class="char-card"><span class="char-icon" data-icon="smoke"></span><b>士兵</b><small>云雾弹 / 军事训练</small></button>
+          <button data-c="tamer" class="char-card"><span class="char-icon" data-icon="roll"></span><b>驯兽师</b><small>翻滚 / 鞭笞</small></button>
+        </div>
+
+        <div id="status" class="status-chip">当前：1v4 / 逃生者 / 矿工</div>
+      </section>
+
+      <section class="glass-card">
+        <div class="section-title">准备</div>
+        <div class="currency-line">
+          <span>煤矿</span>
+          <b id="coalCount">120</b>
+        </div>
+        <button id="shopBtn" class="wide secondary">徽章商店</button>
+        <button id="start" class="wide primary">开始游戏</button>
+        <div class="tip">左下摇杆移动；技能需要长按时，按住后拖动选点/方向，松手释放。</div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="shop" class="modal hidden">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">BADGE SHOP</div>
+        <h2>徽章商店</h2>
+      </div>
+      <button id="shopClose" class="icon-btn">×</button>
+    </div>
+    <div class="shop-meta">
+      <span>煤矿余额：<b id="shopCoal">120</b></span>
+      <span>典藏最多装备 1 个 · 稀有最多装备 3 个</span>
+    </div>
+    <div class="shop-section">
+      <h3>典藏</h3>
+      <div id="legendaryGrid" class="badge-grid"></div>
+    </div>
+    <div class="shop-section">
+      <h3>稀有</h3>
+      <div id="rareGrid" class="badge-grid"></div>
+    </div>
   </div>
 </div>
 
 <canvas id="game"></canvas>
-<div id="hud"></div>
+
+<div id="hud">
+  <div id="hudMain"></div>
+  <div id="paintingAlert"></div>
+</div>
 <div id="toast"></div>
 <button id="back">返回菜单</button>
 
-<div id="controls">
-  <div id="joy"><div id="knob"></div></div>
-  <div class="act" id="interact">交互</div>
-  <div class="act" id="attack">攻击</div>
-  <div class="act" id="skill1">技能1</div>
-  <div class="act" id="skill2">技能2</div>
-  <div class="act" id="carry">扛起</div>
+<div id="calibration" class="hidden">
+  <div class="calib-card">
+    <div class="calib-title">蒸汽炉校准</div>
+    <div class="calib-track">
+      <div class="calib-zone white-left"></div>
+      <div class="calib-zone red-zone"></div>
+      <div class="calib-zone white-right"></div>
+      <div id="needle"></div>
+    </div>
+    <div class="calib-foot">点击任意位置完成本次校准</div>
+  </div>
 </div>
 
-<script>
-(function(){
-'use strict';
-function $(id){return document.getElementById(id)}
-var canvas=$('game'),ctx=canvas.getContext('2d');
-var vw=innerWidth,vh=innerHeight,dpr=1;
-function resize(){
-  vw=innerWidth;vh=innerHeight;dpr=Math.min(2,devicePixelRatio||1);
-  canvas.width=Math.max(1,Math.floor(vw*dpr));canvas.height=Math.max(1,Math.floor(vh*dpr));
-  canvas.style.width=vw+'px';canvas.style.height=vh+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-}
-addEventListener('resize',resize,{passive:true});resize();
+<div id="controls">
+  <div id="joy"><div id="knob"></div></div>
 
-var mode='1v4',side='survivor',char='miner',running=false,last=performance.now();
-var world={w:2500,h:1700},need=5,escaped=0;
-var cname={miner:'矿工',doctor:'医生',dancer:'舞女',soldier:'士兵',tamer:'驯兽师'};
+  <div class="action-btn" id="interact">
+    <span class="skill-icon" data-icon="hand"></span>
+    <span class="skill-label">交互</span>
+  </div>
 
-var walls=[
-[260,160,480,70],[900,100,80,400],[1190,250,500,70],[1880,150,80,420],
-[200,590,80,500],[440,710,510,70],[1120,610,80,500],[1390,740,520,70],
-[2030,690,80,520],[340,1250,540,70],[1060,1300,590,70],[1880,1220,410,75],
-[620,980,80,210],[1500,980,80,220]
-];
-var furnPos=[[390,390],[790,360],[1330,490],[1770,410],[2240,440],[390,1000],[930,1110],[1360,980],[1790,1080],[2240,1000]];
-var lockers=[[600,310],[1060,500],[1680,310],[2230,720],[490,1160],[1400,1200],[1960,1130]];
-var palletsPos=[[770,640],[1240,580],[1640,820],[890,1240],[2070,1190]];
-var popPos=[[230,270],[2280,270],[310,1450],[2200,1430]];
-var gatePos=[[1250,42],[1250,1655]];
+  <div class="action-btn" id="attack">
+    <span class="skill-icon" data-icon="claw"></span>
+    <span class="skill-label">攻击</span>
+  </div>
 
-var entities=[],furnaces=[],pallets=[],gates=[],paintings=[],smokes=[],player=null;
-var toastT=0,joy={x:0,y:0,id:null},keys={};
+  <div class="action-btn major" id="skill1">
+    <span class="skill-icon" data-icon="sketch"></span>
+    <span class="skill-label">技能1</span>
+    <span class="skill-sub"></span>
+    <span class="charge-pill"></span>
+  </div>
 
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function blocked(x,y,r){
-  if(x-r<0||y-r<0||x+r>world.w||y+r>world.h)return true;
-  for(var i=0;i<walls.length;i++){
-    var q=walls[i];
-    if(x+r>q[0]&&x-r<q[0]+q[2]&&y+r>q[1]&&y-r<q[1]+q[3])return true;
-  }
-  return false;
-}
-function move(e,dx,dy){
-  if(!blocked(e.x+dx,e.y,e.r))e.x+=dx;
-  if(!blocked(e.x,e.y+dy,e.r))e.y+=dy;
-}
-function nearest(e,arr,max){
-  if(!arr.length)return null;max=max==null?1e9:max;
-  var best=null,bd=max;
-  for(var i=0;i<arr.length;i++){
-    var o=arr[i],ox=o.x==null?o[0]:o.x,oy=o.y==null?o[1]:o.y;
-    var dd=Math.hypot(e.x-ox,e.y-oy);
-    if(dd<bd){bd=dd;best=o}
-  }
-  return best;
-}
-function step(e,t,s,dt){
-  var dx=t.x-e.x,dy=t.y-e.y,m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
-  var tries=[[dx,dy],[-dy,dx],[dy,-dx],[(dx-dy)*.707,(dy+dx)*.707],[(dx+dy)*.707,(dy-dx)*.707]];
-  for(var i=0;i<tries.length;i++){
-    var vx=tries[i][0],vy=tries[i][1];
-    if(!blocked(e.x+vx*s*dt*2,e.y+vy*s*dt*2,e.r)){move(e,vx*s*dt,vy*s*dt);return}
-  }
-}
-function lineBlocked(a,b){
-  for(var i=1;i<9;i++){
-    var t=i/9,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
-    for(var j=0;j<walls.length;j++){
-      var w=walls[j];
-      if(x>w[0]&&x<w[0]+w[2]&&y>w[1]&&y<w[1]+w[3])return true;
-    }
-  }
-  return false;
-}
-function say(s){$('toast').textContent=s;toastT=1.7}
+  <div class="action-btn major" id="skill2">
+    <span class="skill-icon" data-icon="portal"></span>
+    <span class="skill-label">技能2</span>
+    <span class="skill-sub"></span>
+  </div>
 
-function makeSurv(i,isPlayer){
-  return {kind:'s',x:160+Math.random()*2150,y:150+Math.random()*1350,r:17,
-    hp:mode==='2v8'?3:2,maxhp:mode==='2v8'?3:2,
-    char:isPlayer?char:['miner','doctor','dancer','soldier','tamer'][i%5],
-    speed:165,down:false,dead:false,carried:false,hook:null,hookT:0,hookN:0,
-    hide:null,target:null,skillCd:0,charges:3,chargeT:0,dodge:0,roll:0,boost:0,coal:0,blood:0};
-}
-function makeHunter(i){
-  return {kind:'h',x:i?2150:1250,y:i?1380:850,r:23,speed:180,dead:false,stun:0,atkCd:0,
-    target:null,lastSeen:null,carry:null,energy:0,ult:0,ultCd:0,sketch:2,sketchT:0,boost:0};
-}
-function resetGame(){
-  furnaces=furnPos.map(function(q){return{x:q[0],y:q[1],p:0}});
-  pallets=palletsPos.map(function(q){return{x:q[0],y:q[1],open:false,dead:false}});
-  gates=gatePos.map(function(q){return{x:q[0],y:q[1],open:0}});
-  paintings=[];smokes=[];entities=[];escaped=0;need=mode==='1v4'?5:7;
-  var ns=mode==='1v4'?4:8,nh=mode==='1v4'?1:2,i;
-  if(side==='survivor'){
-    player=makeSurv(0,true);entities.push(player);
-    for(i=1;i<ns;i++)entities.push(makeSurv(i,false));
-    for(i=0;i<nh;i++)entities.push(makeHunter(i));
-  }else{
-    player=makeHunter(0);entities.push(player);
-    for(i=1;i<nh;i++)entities.push(makeHunter(i));
-    for(i=0;i<ns;i++)entities.push(makeSurv(i,false));
-  }
-}
-function updateStatus(){
-  $('status').textContent='当前：'+mode+' / '+(side==='survivor'?'逃生者':'追捕者')+' / '+cname[char];
-}
-function selectPair(a,b,chosen){
-  $(a).classList.toggle('sel',chosen===a);$(b).classList.toggle('sel',chosen===b);
-}
-$('m14').addEventListener('click',function(){mode='1v4';selectPair('m14','m28','m14');updateStatus()});
-$('m28').addEventListener('click',function(){mode='2v8';selectPair('m14','m28','m28');updateStatus()});
-$('ss').addEventListener('click',function(){side='survivor';selectPair('ss','sh','ss');updateStatus()});
-$('sh').addEventListener('click',function(){side='hunter';selectPair('ss','sh','sh');updateStatus()});
-Array.prototype.forEach.call($('chars').querySelectorAll('button'),function(b){
-  b.addEventListener('click',function(){
-    char=b.getAttribute('data-c');
-    Array.prototype.forEach.call($('chars').querySelectorAll('button'),function(x){x.classList.remove('sel')});
-    b.classList.add('sel');updateStatus();
-  });
-});
-$('start').addEventListener('click',function(){
-  resetGame();running=true;$('menu').style.display='none';canvas.style.display='block';$('controls').style.display='block';$('back').style.display='block';say('对局开始');
-});
-$('back').addEventListener('click',function(){
-  running=false;$('menu').style.display='flex';canvas.style.display='none';$('controls').style.display='none';$('back').style.display='none';
-});
+  <div class="action-btn ultimate" id="ultimate">
+    <span class="skill-icon" data-icon="gallery"></span>
+    <span class="skill-label">终极技能</span>
+    <span class="skill-sub"></span>
+  </div>
 
-var jb=$('joy'),knob=$('knob');
-function setJoy(e){
-  var r=jb.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,m=Math.hypot(dx,dy),mx=r.width*.35;
-  if(m>mx){dx*=mx/m;dy*=mx/m}
-  joy.x=dx/mx;joy.y=dy/mx;knob.style.transform='translate('+dx+'px,'+dy+'px)';
-}
-jb.addEventListener('pointerdown',function(e){joy.id=e.pointerId;jb.setPointerCapture(e.pointerId);setJoy(e);e.preventDefault()});
-jb.addEventListener('pointermove',function(e){if(e.pointerId===joy.id){setJoy(e);e.preventDefault()}});
-function joyEnd(e){if(e.pointerId===joy.id){joy.id=null;joy.x=0;joy.y=0;knob.style.transform='translate(0,0)'}}
-jb.addEventListener('pointerup',joyEnd);jb.addEventListener('pointercancel',joyEnd);
+  <div class="action-btn" id="carry">
+    <span class="skill-icon" data-icon="carry"></span>
+    <span class="skill-label">扛起</span>
+  </div>
+</div>
 
-addEventListener('keydown',function(e){keys[e.key.toLowerCase()]=1;
-  if(e.key.toLowerCase()==='e')interact();if(e.key.toLowerCase()==='j')attack();
-  if(e.key.toLowerCase()==='k')skill1();if(e.key.toLowerCase()==='l')skill2();
-});
-addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=0});
+<div id="aimHint" class="hidden">
+  <div id="aimTitle"></div>
+  <div id="aimText"></div>
+</div>
 
-function damage(s){
-  if(s.dodge>0){say('闪避成功');return}
-  s.hp--;s.boost=1;
-  if(s.hp<=0){s.hp=0;s.down=true}
-}
-function interact(){
-  if(!running||!player||player.dead)return;
-  if(player.kind==='s'){
-    if(player.down)return;
-    var i,l,p,f,m,g,done;
-    for(i=0;i<lockers.length;i++){
-      l=lockers[i];
-      if(Math.hypot(player.x-l[0],player.y-l[1])<55){
-        if(player.hide){player.hide=null;say('离开柜子')}
-        else{player.hide=l;player.x=l[0];player.y=l[1];say('躲进柜子')}
-        return;
-      }
-    }
-    p=nearest(player,pallets.filter(function(x){return !x.dead}),62);
-    if(p){
-      if(!p.open){
-        p.open=true;
-        entities.filter(function(e){return e.kind==='h'}).forEach(function(h){if(Math.hypot(h.x-p.x,h.y-p.y)<75)h.stun=1.5});
-        say('拉开折叠板');
-      }else{move(player,58,0);say('翻越折叠板')}
-      return;
-    }
-    f=nearest(player,furnaces.filter(function(x){return x.p<100}),85);
-    if(f){player.target=f;say('开始挖蒸汽炉');return}
-    m=nearest(player,entities.filter(function(e){return e.kind==='s'&&e!==player&&!e.dead}),68);
-    if(m){
-      if(m.hook){m.hook=null;m.down=false;m.hp=Math.max(1,m.hp);say('救援成功');return}
-      if(m.hp<m.maxhp){m.hp=Math.min(m.maxhp,m.hp+1);m.down=false;say('治疗 +1 HP');return}
-    }
-    done=furnaces.filter(function(x){return x.p>=100}).length;
-    if(done>=need){
-      g=nearest(player,gates,92);
-      if(g){player.target={gate:g};say('正在开启逃生门');return}
-    }
-  }else{
-    var pp=nearest(player,pallets.filter(function(x){return x.open&&!x.dead}),75);
-    if(pp){pp.dead=true;say('折叠板已破坏')}
-  }
-}
-function attack(){
-  if(!running||!player||player.kind!=='h'||player.atkCd>0)return;
-  player.atkCd=.85;
-  var i,l,s;
-  for(i=0;i<lockers.length;i++){
-    l=lockers[i];
-    if(Math.hypot(player.x-l[0],player.y-l[1])<65){
-      s=entities.find(function(e){return e.kind==='s'&&e.hide===l&&!e.dead});
-      if(s){s.hide=null;damage(s);say('击中柜中逃生者');return}
-    }
-  }
-  s=nearest(player,entities.filter(function(e){return e.kind==='s'&&!e.dead&&!e.carried&&!e.hide}),76);
-  if(s){damage(s);say('命中逃生者')}
-}
-function carry(){
-  if(!running||!player||player.kind!=='h')return;
-  var s,pc;
-  if(player.carry){
-    pc=nearest(player,popPos,95);
-    if(pc){
-      s=player.carry;s.carried=false;s.hook=pc;s.x=pc[0];s.y=pc[1];s.hookN++;player.carry=null;
-      if(s.hookN>=3){s.dead=true;s.hook=null;say('第三次上挂，直接淘汰')}else say('挂上爆米花机');
-    }
-    return;
-  }
-  s=nearest(player,entities.filter(function(e){return e.kind==='s'&&e.down&&!e.dead&&!e.carried}),68);
-  if(s){player.carry=s;s.carried=true;say('扛起逃生者')}
-}
-function skill1(){
-  if(!running||!player)return;
-  if(player.kind==='s'){
-    if(player.char==='miner'){
-      var f=nearest(player,furnaces.filter(function(x){return x.p<100}),115);
-      if(player.coal>=50&&f){f.p=Math.min(100,f.p+30);player.coal-=50;say('铁铲：蒸汽炉 +30%')}else say('矿渣不足 50');
-    }else if(player.char==='doctor'){
-      if(player.hp<player.maxhp){player.hp++;player.blood=Math.min(10,player.blood+1);say('医疗包：恢复 1 HP')}else say('生命值已满');
-    }else if(player.char==='dancer'){
-      if(player.charges>0){player.charges--;player.dodge=1;player.boost=1;say('闪避')}else say('闪避充能不足');
-    }else if(player.char==='soldier'){
-      if(player.skillCd<=0){smokes.push({x:player.x,y:player.y,t:5});player.skillCd=23;say('云雾弹')}else say('技能冷却中');
-    }else if(player.char==='tamer'){
-      if(player.skillCd<=0){player.roll=2;player.skillCd=28;say('翻滚')}else say('技能冷却中');
-    }
-  }else{
-    if(player.sketch>0){
-      var a=Math.atan2(joy.y||0,joy.x||1);
-      paintings.push({x:clamp(player.x+Math.cos(a)*190,40,world.w-40),y:clamp(player.y+Math.sin(a)*190,40,world.h-40),t:40,active:0,near:0});
-      player.sketch--;say('速写：放置画作');
-    }else say('速写充能不足');
-  }
-}
-function skill2(){
-  if(!running||!player||player.kind!=='h')return;
-  var cand=paintings.filter(function(p){return (p.active>0||player.ult>0)&&Math.hypot(player.x-p.x,player.y-p.y)<=500});
-  var p=nearest(player,cand,500);
-  if(p){player.x=p.x;player.y=p.y;player.boost=3;p.t=0;say('出画');return}
-  if(player.energy>=100&&player.ultCd<=0){player.energy=0;player.ult=20;say('画廊穿梭：20秒')}
-  else say('没有可传送画作 / 终极技能未就绪');
-}
-$('interact').addEventListener('pointerdown',function(e){e.preventDefault();interact()});
-$('attack').addEventListener('pointerdown',function(e){e.preventDefault();attack()});
-$('carry').addEventListener('pointerdown',function(e){e.preventDefault();carry()});
-$('skill1').addEventListener('pointerdown',function(e){e.preventDefault();skill1()});
-$('skill2').addEventListener('pointerdown',function(e){e.preventDefault();skill2()});
-
-function aiHunter(h,dt){
-  if(h.stun>0){h.stun-=dt;return}
-  if(h.carry){
-    var pc=nearest(h,popPos);
-    step(h,{x:pc[0],y:pc[1]},h.speed,dt);
-    if(Math.hypot(h.x-pc[0],h.y-pc[1])<58){
-      var s=h.carry;s.carried=false;s.hook=pc;s.x=pc[0];s.y=pc[1];s.hookN++;h.carry=null;
-      if(s.hookN>=3){s.dead=true;s.hook=null}
-    }
-    return;
-  }
-  var vis=entities.filter(function(s){return s.kind==='s'&&!s.dead&&!s.carried&&!s.hide&&dist(h,s)<420&&!lineBlocked(h,s)});
-  if(vis.length){h.target=nearest(h,vis);h.lastSeen={x:h.target.x,y:h.target.y,t:3}}
-  if(h.target&&!h.target.dead&&!h.target.hide&&dist(h,h.target)<520){
-    step(h,h.target,h.speed,dt);
-    if(dist(h,h.target)<66&&h.atkCd<=0){h.atkCd=.95;damage(h.target)}
-    if(h.target.down&&dist(h,h.target)<50){h.carry=h.target;h.target.carried=true}
-    return;
-  }
-  h.target=null;
-  if(h.lastSeen&&h.lastSeen.t>0){h.lastSeen.t-=dt;step(h,h.lastSeen,h.speed*.84,dt);return}
-  var f=furnaces.filter(function(x){return x.p<100}).sort(function(a,b){return b.p-a.p})[0];
-  if(f)step(h,f,h.speed*.68,dt);
-}
-function aiSurv(s,dt){
-  if(s.dead||s.carried||s.hook)return;
-  var hunters=entities.filter(function(e){return e.kind==='h'&&!e.dead}),h=nearest(s,hunters);
-  if(s.down){
-    if(h){var dx=s.x-h.x,dy=s.y-h.y,m=Math.hypot(dx,dy)||1;move(s,dx/m*s.speed*.5*dt,dy/m*s.speed*.5*dt)}
-    return;
-  }
-  if(h&&dist(s,h)<250){
-    var p=nearest(s,pallets.filter(function(x){return !x.dead&&!x.open}),180);
-    if(p){step(s,p,s.speed*1.05,dt);if(Math.hypot(s.x-p.x,s.y-p.y)<40){p.open=true;if(Math.hypot(h.x-p.x,h.y-p.y)<75)h.stun=1.5}}
-    else{var dx2=s.x-h.x,dy2=s.y-h.y,m2=Math.hypot(dx2,dy2)||1;move(s,dx2/m2*s.speed*1.05*dt,dy2/m2*s.speed*1.05*dt)}
-    return;
-  }
-  var hook=nearest(s,entities.filter(function(e){return e.kind==='s'&&e.hook&&!e.dead&&e!==s}));
-  if(hook&&(!h||dist(h,hook)>180)){
-    step(s,hook,s.speed,dt);if(dist(s,hook)<55){hook.hook=null;hook.down=false;hook.hp=Math.max(1,hook.hp)}return;
-  }
-  var f=nearest(s,furnaces.filter(function(x){return x.p<100}));
-  if(f){
-    step(s,f,s.speed*.9,dt);
-    if(Math.hypot(s.x-f.x,s.y-f.y)<72){f.p=Math.min(100,f.p+.36*(s.char==='miner'?1.5:1)*dt);s.coal+=dt}
-  }else{
-    var g=nearest(s,gates);
-    step(s,g,s.speed,dt);
-    if(Math.hypot(s.x-g.x,s.y-g.y)<72){g.open=Math.min(10,g.open+dt);if(g.open>=10){s.dead=true;escaped++}}
-  }
-}
-function update(dt){
-  if(!running||!player)return;
-  var ix=(keys.d?1:0)-(keys.a?1:0)+joy.x,iy=(keys.s?1:0)-(keys.w?1:0)+joy.y,m=Math.hypot(ix,iy);
-  if(m>1){ix/=m;iy/=m}
-  if(!player.dead&&!player.carried&&!player.hook&&!player.down&&!player.hide){
-    var sp=player.speed*(player.boost>0?1.25:1)*(player.roll>0?1.4:1);
-    move(player,ix*sp*dt,iy*sp*dt);
-  }
-  entities.forEach(function(e){
-    if(e.atkCd>0)e.atkCd=Math.max(0,e.atkCd-dt);
-    if(e.skillCd>0)e.skillCd=Math.max(0,e.skillCd-dt);
-    if(e.boost>0)e.boost=Math.max(0,e.boost-dt);
-    if(e.dodge>0)e.dodge=Math.max(0,e.dodge-dt);
-    if(e.roll>0)e.roll=Math.max(0,e.roll-dt);
-    if(e.kind==='s'&&e.char==='dancer'&&e.charges<3){e.chargeT+=dt;if(e.chargeT>=25){e.charges++;e.chargeT=0}}
-    if(e.kind==='h'){
-      e.energy=Math.min(100,e.energy+dt);
-      if(e.ult>0){e.ult-=dt;if(e.ult<=0)e.ultCd=20}else if(e.ultCd>0)e.ultCd=Math.max(0,e.ultCd-dt);
-      if(e.sketch<2){e.sketchT+=dt;if(e.sketchT>=15){e.sketch++;e.sketchT=0}}
-    }
-  });
-  if(player.kind==='s'&&player.target){
-    if(player.target.gate){
-      var g=player.target.gate;
-      if(Math.hypot(player.x-g.x,player.y-g.y)<92){
-        g.open=Math.min(10,g.open+dt);
-        if(g.open>=10&&!player.dead){player.dead=true;escaped++;say('成功逃生')}
-      }else player.target=null;
-    }else{
-      var f=player.target;
-      if(Math.hypot(player.x-f.x,player.y-f.y)<85&&f.p<100){f.p=Math.min(100,f.p+.36*(player.char==='miner'?1.5:1)*dt);player.coal+=dt}
-      else player.target=null;
-    }
-  }
-  entities.filter(function(e){return e.kind==='s'&&!e.dead}).forEach(function(s){
-    if(s.hook){s.hookT+=dt;if(s.hookT>=20){s.dead=true;s.hook=null}}
-  });
-  paintings.forEach(function(p){
-    p.t-=dt;
-    if(p.active>0)p.active-=dt;
-    else{
-      var near=entities.find(function(e){return e.kind==='s'&&!e.dead&&Math.hypot(e.x-p.x,e.y-p.y)<100});
-      if(near){p.near+=dt;if(p.near>=2){p.active=10;entities.filter(function(e){return e.kind==='h'}).forEach(function(h){h.energy=Math.min(100,h.energy+25)})}}
-      else p.near=0;
-    }
-  });
-  paintings=paintings.filter(function(p){return p.t>0});
-  smokes.forEach(function(s){s.t-=dt});smokes=smokes.filter(function(s){return s.t>0});
-  entities.forEach(function(e){if(e!==player&&!e.dead){if(e.kind==='h')aiHunter(e,dt);else aiSurv(e,dt)}});
-  if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').textContent=''}
-}
-function drawEgg(e,x,y){
-  ctx.fillStyle=e.down?'#838383':'#f0e1c2';ctx.beginPath();ctx.ellipse(x,y,17,22,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(x-5,y-4,2,0,Math.PI*2);ctx.arc(x+5,y-4,2,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText(cname[e.char],x-17,y-28);
-}
-function drawBelinda(e,x,y){
-  ctx.fillStyle='#07070a';ctx.beginPath();ctx.ellipse(x,y-28,31,7,0,0,Math.PI*2);ctx.fill();ctx.fillRect(x-12,y-29,24,12);
-  ctx.fillStyle='#17131c';ctx.beginPath();ctx.moveTo(x-18,y-15);ctx.lineTo(x+19,y-15);ctx.lineTo(x+28,y+29);ctx.lineTo(x-25,y+29);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#2a2130';ctx.fillRect(x-43,y-13,20,31);
-  ctx.strokeStyle='#9256aa';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+17,y-4);ctx.lineTo(x+32,y+11);ctx.stroke();
-  ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.fillText('贝琳达',x-18,y-39);
-}
-function draw(){
-  ctx.clearRect(0,0,vw,vh);
-  if(!running||!player)return;
-  var camX=clamp(player.x-vw/2,0,Math.max(0,world.w-vw)),camY=clamp(player.y-vh/2,0,Math.max(0,world.h-vh));
-  ctx.save();ctx.translate(-camX,-camY);
-  ctx.fillStyle='#26332c';ctx.fillRect(0,0,world.w,world.h);
-  ctx.fillStyle='#596165';walls.forEach(function(w){ctx.fillRect(w[0],w[1],w[2],w[3])});
-  furnaces.forEach(function(f){ctx.fillStyle=f.p>=100?'#45c989':'#b36f31';ctx.fillRect(f.x-22,f.y-22,44,44);ctx.fillStyle='#fff';ctx.font='11px sans-serif';ctx.fillText(Math.floor(f.p)+'%',f.x-16,f.y+38)});
-  ctx.fillStyle='#365161';lockers.forEach(function(l){ctx.fillRect(l[0]-18,l[1]-28,36,56)});
-  pallets.forEach(function(p){if(!p.dead){ctx.fillStyle='#b77c42';ctx.fillRect(p.x-(p.open?6:28),p.y-(p.open?28:6),p.open?12:56,p.open?56:12)}});
-  popPos.forEach(function(p){ctx.fillStyle='#a83458';ctx.fillRect(p[0]-24,p[1]-32,48,64)});
-  gates.forEach(function(g){ctx.strokeStyle=g.open>=10?'#65ef92':'#efc75d';ctx.lineWidth=7;ctx.strokeRect(g.x-55,g.y-18,110,36)});
-  smokes.forEach(function(s){ctx.fillStyle='rgba(165,165,180,.25)';ctx.beginPath();ctx.arc(s.x,s.y,120,0,Math.PI*2);ctx.fill()});
-  paintings.forEach(function(p){ctx.fillStyle=p.active>0?'#c94eff':'#21192b';ctx.fillRect(p.x-18,p.y-28,36,56)});
-  entities.forEach(function(e){
-    if(e.dead||(e.hide&&e!==player))return;
-    if(e.kind==='s')drawEgg(e,e.x,e.y);else drawBelinda(e,e.x,e.y);
-    if(e.kind==='s'&&e.hook){ctx.fillStyle='#ff9696';ctx.fillText(Math.max(0,20-e.hookT).toFixed(1),e.x-10,e.y-36)}
-  });
-  if(player.kind==='s'){
-    var hs=entities.filter(function(e){return e.kind==='h'&&!e.dead}),near=nearest(player,hs);
-    if(near&&dist(player,near)<500){ctx.strokeStyle=near.target===player?'rgba(255,45,45,.72)':'rgba(255,220,55,.55)';ctx.lineWidth=8;ctx.beginPath();ctx.arc(player.x,player.y,42,0,Math.PI*2);ctx.stroke()}
-  }
-  ctx.restore();
-  var done=furnaces.filter(function(f){return f.p>=100}).length;
-  $('hud').innerHTML=(side==='survivor'?'逃生':'追捕')+'｜'+mode+'｜蒸汽炉 '+done+'/'+need+'｜逃出 '+escaped+'<br>'+
-    (player.kind==='s'?('HP '+player.hp+'/'+player.maxhp+'｜'+cname[player.char]):('贝琳达｜能量 '+Math.floor(player.energy)+'%'));
-}
-function frame(ts){
-  var dt=Math.min(.033,Math.max(0,(ts-last)/1000));last=ts;update(dt);draw();requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
-window.__steamGame={getMode:function(){return mode},getSide:function(){return side},isRunning:function(){return running}};
-})();
-</script>
+<script src="./game.js"></script>
 </body>
 </html>
